@@ -1,41 +1,49 @@
 <template>
-    <div>
-        <canvas ref="chartCanvas"></canvas>
-    </div>
+  <div>
+    <canvas ref="chartCanvas"></canvas>
+  </div>
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted} from 'vue';
-import {Chart, registerables } from 'chart.js';
+import { ref, onMounted, watch } from 'vue';
+import { Chart, registerables } from 'chart.js';
+import { useChartStore } from '../stores/chartData';
 
 Chart.register(...registerables);
 
 const chartCanvas = ref<HTMLCanvasElement | null>(null);
+const store = useChartStore();
+let chartInstance: Chart | null = null;
+
+function createOrUpdateChart() {
+  if (chartCanvas.value) {
+    if(chartInstance) {
+        chartInstance.destroy();
+    }
+    chartInstance = new Chart(chartCanvas.value, {
+        type: store.chartType,
+        data: store.chartData,
+        options: {
+            responsive: true,
+            scales: store.chartType === 'pie' ? {} : {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    })
+  }
+};
 
 onMounted(() => {
-    if(chartCanvas.value) {
-        new Chart(chartCanvas.value, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                datasets: [
-                    {
-                        label: 'Temperature (°C)',
-                        data: [10, 12, 15, 14, 18, 20],
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        fill: false,
-                    },
-                ],
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                    },
-                },
-            },
-        });
-    }
+    createOrUpdateChart()
 });
+
+watch(
+  () => [store.chartData, store.chartType],
+  () => {
+    createOrUpdateChart();
+  },
+  { deep: true }
+);
 </script>
