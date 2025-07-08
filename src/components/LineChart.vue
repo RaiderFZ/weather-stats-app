@@ -26,6 +26,7 @@ const createOrUpdateChart = () => {
         data: store.chartData,
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             animation: {
               duration: 1000, // Анимация появления графика (1 секунда)
               easing: 'easeInOutQuad',
@@ -64,6 +65,8 @@ watch(
 .chart-container {
   opacity: 0;
   animation: fadeIn 1s ease-in-out forwards;
+  max-height: 400px;
+  width: 100%;
 }
 
 @keyframes fadeIn {
@@ -74,6 +77,12 @@ watch(
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .chart-container {
+    max-height: 300px; /* Меньшая высота на мобильных */
   }
 }
 </style>

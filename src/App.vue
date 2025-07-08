@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <h1 class="title">Weather Stats Dashboard</h1>
-    <div class="controls">
+    <div class="controls flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
       <label for="city" class="mr-2">
         City:
       </label>
@@ -10,11 +10,11 @@
         type="text"
         v-model="city"
         placeholder="Enter city"
-        class="border p-2 mr-2">
+        class="border p-2 w-full sm:w-auto">
       <button 
         @click="fetchData"
         :disabled="store.isLoading"
-        class="p-2 bg-blue-500 text-white"
+        class="p-2 bg-blue-500 text-white hover:bg-blue-600 w-full sm:w-auto"
       >
         {{ store.isLoading ? 'Loading...' : 'Fetch Weather' }}
       </button>
@@ -57,6 +57,7 @@ const fetchData = async () => {
   font-size: 1.5rem;
   font-weight: bold;
   margin-bottom: 16px;
+  text-align: center;
 }
 .controls {
   margin-bottom: 16px;
@@ -70,6 +71,14 @@ const fetchData = async () => {
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-left: 8px;
+}
+@media (max-width: 640px) {
+  .container {
+    padding: 8px;
+  }
+  .title {
+    font-size: 1.25rem;
+  }
 }
 @keyframes spin {
   to {

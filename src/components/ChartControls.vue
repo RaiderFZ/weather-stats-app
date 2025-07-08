@@ -1,60 +1,69 @@
 <template>
-  <div class="controls">
-    <div class="flex items-center mb-4">
+  <div class="controls flex flex-col space-y-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
       <label for="chartType" class="mr-2">Chart Type:</label>
       <select
         id="chartType"
         v-model="selectedChartType"
-        class="border p-2"
+        class="border p-2 w-full sm:w-auto"
       >
         <option value="line">Line</option>
         <option value="bar">Bar</option>
         <option value="pie">Pie</option>
       </select>
     </div>
-    <div class="flex items-center space-x-4">
-      <div>
+    <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+      <div class="flex flex-col">
         <label for="startDate" class="mr-2">Start Date:</label>
         <input
           id="startDate"
           v-model="startDate"
           type="date"
           :max="maxDate"
-          class="border p-2"
+          class="border p-2 w-full"
           @change="filterData"
         />
       </div>
-      <div>
+      <div class="flex flex-col">
         <label for="endDate" class="mr-2">End Date:</label>
         <input
           id="endDate"
           v-model="endDate"
           type="date"
           :max="maxDate"
-          class="border p-2"
+          class="border p-2 w-full"
           @change="filterData"
         />
       </div>
     </div>
+    <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+      <button
+        @click="exportChart"
+        class="p-2 bg-green-500 text-white hover:bg-green-600 w-full sm:w-auto"
+      >
+      Export Chart as PNG 
+      </button>
 
-    <button
-      @click="exportChart"
-      class="p-2 bg-green-500 text-white hover:bg-green-600"
-    >
-     Export Chart as PNG 
-    </button>
+      <button
+        @click="resetDates"
+        class="p-2 bg-gray-400 text-white hover:bg-gray-500 w-full sm:w-auto"
+      >
+        Reset Dates
+      </button>
 
-    <button
-      @click="resetDates"
-      class="p-2 bg-gray-400 text-white hover:bg-gray-500"
-    >
-      Reset Dates
-    </button>
+      <button
+        @click="clearLocalStorage"
+        class="p-2 bg-red-500 text-white hover:bg-red-600 w-full sm:w-auto"
+      >
+        Clear Saved Data
+      </button>
+    </div>
+    
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useChartStore } from '../stores/chartData';
 import { useChartInstance } from '../composables/useChartInstance';
 
@@ -77,6 +86,8 @@ const maxDate = computed(() => {
 const resetDates = () => {
   startDate.value = '';
   endDate.value = '';
+  localStorage.removeItem('weatherStartDate');
+  localStorage.removeItem('weatherEndDate');
   store.filterByDateRange('', '');
 };
 
@@ -85,7 +96,8 @@ const filterData = () => {
     alert('End date must be after start date');
     return;
   }
-  
+  localStorage.setItem('weatherStartDate', startDate.value);
+  localStorage.setItem('weatherEndDate', endDate.value);
   store.filterByDateRange(startDate.value, endDate.value);
 };
 
@@ -102,6 +114,26 @@ const exportChart = () => {
     alert('No chart available to export');
   }
 };
+
+const clearLocalStorage = () => {
+    localStorage.removeItem('weatherCity');
+    localStorage.removeItem('weatherStartDate');
+    localStorage.removeItem('weatherEndDate');
+    store.chartData = { labels: [], datasets: [] };
+    store.error = null;
+    alert('Saved data cleared');
+  };
+
+  onMounted(() => {
+    const savedStart = localStorage.getItem('weatherStartDate');
+    const savedEnd = localStorage.getItem('weatherEndDate');
+
+    if (savedStart && savedEnd) {
+      startDate.value = savedStart;
+      endDate.value = savedEnd;
+      store.filterByDateRange(savedStart, savedEnd);
+    }
+  });
 </script>
 
 <style scoped>
