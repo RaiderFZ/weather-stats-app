@@ -15,7 +15,7 @@ const chartCanvas = ref<HTMLCanvasElement | null>(null);
 const store = useChartStore();
 let chartInstance: Chart | null = null;
 
-function createOrUpdateChart() {
+const createOrUpdateChart = () => {
   if (chartCanvas.value) {
     if(chartInstance) {
         chartInstance.destroy();
