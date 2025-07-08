@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="chart-container">
     <canvas ref="chartCanvas"></canvas>
   </div>
 </template>
@@ -8,23 +8,28 @@
 import { ref, onMounted, watch } from 'vue';
 import { Chart, registerables } from 'chart.js';
 import { useChartStore } from '../stores/chartData';
+import { useChartInstance } from '../composables/useChartInstance';
 
 Chart.register(...registerables);
 
 const chartCanvas = ref<HTMLCanvasElement | null>(null);
 const store = useChartStore();
-let chartInstance: Chart | null = null;
+let chartInstance = useChartInstance();
 
 const createOrUpdateChart = () => {
   if (chartCanvas.value) {
-    if(chartInstance) {
-        chartInstance.destroy();
+    if(chartInstance.value) {
+      chartInstance.value.destroy();
     }
-    chartInstance = new Chart(chartCanvas.value, {
+    chartInstance.value = new Chart(chartCanvas.value, {
         type: store.chartType,
         data: store.chartData,
         options: {
             responsive: true,
+            animation: {
+              duration: 1000, // Анимация появления графика (1 секунда)
+              easing: 'easeInOutQuad',
+            },
             scales: store.chartType === 'pie' ? {} : {
                 y: {
                     beginAtZero: true
@@ -40,10 +45,35 @@ onMounted(() => {
 });
 
 watch(
-  () => [store.chartData, store.chartType],
+  () => store.chartData,
   () => {
     createOrUpdateChart();
   },
   { deep: true }
 );
+
+watch(
+  () => store.chartType,
+  () => {
+    createOrUpdateChart();
+  }
+);
 </script>
+
+<style scoped>
+.chart-container {
+  opacity: 0;
+  animation: fadeIn 1s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+</style>

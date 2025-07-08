@@ -6,24 +6,23 @@
         City:
       </label>
       <input 
+        id="city"
         type="text"
         v-model="city"
         placeholder="Enter city"
         class="border p-2 mr-2">
-
       <button 
         @click="fetchData"
         :disabled="store.isLoading"
         class="p-2 bg-blue-500 text-white"
       >
-        {{ store.isLoading ? 'Loading...' : 'Fetch Weatcher' }}
+        {{ store.isLoading ? 'Loading...' : 'Fetch Weather' }}
       </button>
+      <div v-if="store.isLoading" class="spinner"></div>
       <p v-if="store.error" class="text-red-500 mt-2">
         {{ store.error }}
       </p>
     </div>
-
-
     <ChartControls />
     <LineChart/>
   </div>
@@ -37,20 +36,19 @@ import { useChartStore } from './stores/chartData';
 
 const store = useChartStore();
 const city = ref('London');
-const selectedChartType = ref(store.chartType);
-let abortedController: AbortController | null = null;
+let abortController: AbortController | null = null;
 
 const fetchData = async () => {
-  if(abortedController) {
-    abortedController.abort();
+  if(abortController) {
+    abortController.abort();
   }
-  abortedController = new AbortController();
-  await store.fetchWeatherData(city.value, abortedController);
+  abortController = new AbortController();
+  await store.fetchWeatherData(city.value, abortController);
 }
 </script>
 
 <style scoped>
-  .container {
+.container {
   max-width: 800px;
   margin: 0 auto;
   padding: 16px;
@@ -62,5 +60,20 @@ const fetchData = async () => {
 }
 .controls {
   margin-bottom: 16px;
+}
+.spinner {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-left-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-left: 8px;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

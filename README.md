@@ -23,5 +23,8 @@ A Vue 3 application for visualizing weather data with Chart.js, TypeScript, and 
 4. Open `http://localhost:5173` in your browser.
 
 ## Features
-- Displays a line chart with static temperature data (to be replaced with API data).
+- Fetches weather data from OpenWeatherMap API for a user-specified city.
+- Supports switching between line, bar, and pie chart types using Pinia.
+- Handles request cancellation with AbortController.
+- Filters weather data by date range.
 - Built with Vue 3, TypeScript, Pinia, and Chart.js.
