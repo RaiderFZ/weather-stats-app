@@ -12,6 +12,11 @@ export interface ChartData {
     }[];
 };
 
+interface WeatherForecast {
+    dt: number,
+    main: {temp: number };
+}
+
 export const useChartStore = defineStore('chart', () =>  {
     const chartData = ref<ChartData>({
         labels: [], 
@@ -20,6 +25,7 @@ export const useChartStore = defineStore('chart', () =>  {
     const chartType = ref<'line' | 'bar' | 'pie'>('line');
     const isLoading = ref(false);
     const error = ref<string | null>(null);
+    const rawForecasts = ref<WeatherForecast[]>([]);
 
     const fetchWeatherData = async (city: string, abortController: AbortController) => {
         isLoading.value = true;
@@ -31,17 +37,8 @@ export const useChartStore = defineStore('chart', () =>  {
                 { signal: abortController.signal }
             );
 
-            const forecasts = response.data.list.slice(0, 6);
-            chartData.value = {
-                labels: forecasts.map((f: any) => new Date(f.dt * 1000).toLocaleDateString()),
-                datasets: [
-                    {
-                        label: `Temperature in ${city} (°C)`,
-                        data: forecasts.map((f: any) => f.main.temp),
-                        borderColor: 'rgba(75, 192, 192, 1)',fill: false,
-                    },
-                ],
-            };
+            rawForecasts.value = response.data.list.slice(0, 6);
+            updateChartData(rawForecasts.value, city);
         } catch (err: any) {
             if(err.name === 'AbortError') {
                 console.log('Request aborted');
@@ -57,5 +54,37 @@ export const useChartStore = defineStore('chart', () =>  {
         chartType.value = type;
     }
 
-    return { chartData, chartType, isLoading, error, fetchWeatherData, updateChartType };
+    const updateChartData = (forecasts: WeatherForecast[], city: string) => {
+        chartData.value = {
+            labels:forecasts.map((f) => new Date(f.dt * 1000).toLocaleDateString()),
+      datasets: [
+                {
+                    label: `Temperature in ${city} (°C)`,
+                    data: forecasts.map((f) => f.main.temp),
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    fill: false,
+                },
+            ],
+        };
+    }
+
+    const filterByDateRange = (startDate: string, endDate: string) => {
+        if(!startDate || !endDate || !rawForecasts.value.length) {
+            return;
+        }
+
+        const start = new Date(startDate).getTime() / 1000;
+        const end = new Date(endDate).getTime() / 1000;
+
+        const filteredForecasts = rawForecasts.value.filter(
+            (f) => f.dt >= start && f.dt <= end
+        );
+
+        updateChartData(
+            filteredForecasts.length ? filteredForecasts : rawForecasts.value,
+            chartData.value.datasets[0]?.label?.split(' in ')[1] || 'Unknown'
+        );
+    }
+
+    return { chartData, chartType, isLoading, error, fetchWeatherData, updateChartType, filterByDateRange };
 })
