@@ -96,34 +96,37 @@ export const useChartStore = defineStore('chart', () => {
   };
 
     const fetchCurrentWeather = async (city: string) => {
-        try {
-            const cached = localStorage.getItem('weatherCurrent');
-            const cachedTime = localStorage.getItem('weatherCurrentTime');
-            const now = Date.now();
-            if (cached && cachedTime && now - parseInt(cachedTime) < 3600000) { // 1 час
-            currentWeather.value = JSON.parse(cached) as CurrentWeather;
-            return;
-            }
+      try {
+        const key = `weatherCurrent-${city.toLowerCase()}`;
+        const timeKey = `weatherCurrentTime-${city.toLowerCase()}`;
+        const cached = localStorage.getItem(key);
+        const cachedTime = localStorage.getItem(timeKey);
+        const now = Date.now();
 
-            const response = await axios.get(
-            `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${import.meta.env.VITE_API_KEY}&units=metric`
-            );
-
-            const weather = response.data;
-            const parsed: CurrentWeather = {
-            temp: weather.main.temp,
-            humidity: weather.main.humidity,
-            pressure: weather.main.pressure,
-            description: weather.weather[0]?.description ?? 'No data',
-            city: weather.name,
-            };
-
-            currentWeather.value = parsed;
-            localStorage.setItem('weatherCurrent', JSON.stringify(parsed));
-            localStorage.setItem('weatherCurrentTime', now.toString());
-        } catch (err: unknown) {
-            console.error('Failed to fetch current weather', err);
+        if (cached && cachedTime && now - parseInt(cachedTime) < 3600000) {
+          currentWeather.value = JSON.parse(cached) as CurrentWeather;
+          return;
         }
+
+        const response = await axios.get(
+          `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${import.meta.env.VITE_API_KEY}&units=metric`
+        );
+
+        const weather = response.data;
+        const parsed: CurrentWeather = {
+          temp: weather.main.temp,
+          humidity: weather.main.humidity,
+          pressure: weather.main.pressure,
+          description: weather.weather[0]?.description ?? 'No data',
+          city: weather.name,
+        };
+
+        currentWeather.value = parsed;
+        localStorage.setItem(key, JSON.stringify(parsed));
+        localStorage.setItem(timeKey, now.toString());
+      } catch (err) {
+        console.error('Failed to fetch current weather', err);
+      }
     };
 
   return {

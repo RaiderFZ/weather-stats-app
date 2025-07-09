@@ -3,17 +3,17 @@
     <div
       v-if="store.currentWeather"
       key="weather-card"
-      class="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-xl flex flex-col sm:flex-row sm:justify-between sm:items-center animate-fade-in"
+      class="weather-card animate-fade-in"
     >
-      <div class="flex items-center space-x-4">
-        <div class="text-6xl">🌤</div>
+      <div class="weather-main">
+        <div class="weather-icon">🌤</div>
         <div>
-          <h2 class="text-2xl font-bold text-gray-900">{{ store.currentWeather.city }}</h2>
-          <p class="text-gray-600 capitalize">{{ store.currentWeather.description }}</p>
+          <h2 class="city-name">{{ store.currentWeather.city }}</h2>
+          <p class="description">{{ store.currentWeather.description }}</p>
         </div>
       </div>
-      <div class="mt-4 sm:mt-0 text-right">
-        <p class="text-5xl font-bold text-blue-700">{{ store.currentWeather.temp }}°C</p>
+      <div class="weather-info">
+        <p class="temp">{{ store.currentWeather.temp }}°C</p>
         <p class="text-sm text-gray-700">💧 Humidity: {{ store.currentWeather.humidity }}%</p>
         <p class="text-sm text-gray-700">🧭 Pressure: {{ store.currentWeather.pressure }} hPa</p>
       </div>
@@ -28,18 +28,47 @@ const store = useChartStore();
 </script>
 
 <style scoped>
-@keyframes fade-slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.weather-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
 }
 
-.animate-fade-in {
-  animation: fade-slide-up 0.5s ease-out;
+.weather-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.weather-icon {
+  font-size: 48px;
+}
+
+.city-name {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1e3a8a;
+}
+
+.description {
+  text-transform: capitalize;
+  color: #4b5563;
+}
+
+.weather-info {
+  text-align: right;
+}
+
+.temp {
+  font-size: 36px;
+  font-weight: bold;
+  color: #2563eb;
 }
 </style>

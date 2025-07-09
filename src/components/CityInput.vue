@@ -1,86 +1,118 @@
 <template>
-  <div class="bg-white/80 backdrop-blur p-4 rounded-lg shadow space-y-4">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">
-      <label for="city" class="text-gray-700 font-semibold">City:</label>
+  <div class="city-input">
+    <div class="form-group">
+      <label for="city" class="label">City:</label>
       <input
         id="city"
         type="text"
         v-model="localCity"
         placeholder="Enter city"
-        class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+        class="input"
       />
       <button
         @click="fetchData"
         :disabled="store.isLoading"
-        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-md transition disabled:opacity-50"
+        class="button"
       >
         {{ store.isLoading ? 'Loading...' : 'Fetch Weather' }}
       </button>
-      <div v-if="store.isLoading" class="spinner ml-2"></div>
+      <div v-if="store.isLoading" class="spinner"></div>
     </div>
-    <p v-if="store.error" class="text-red-600 text-sm">{{ store.error }}</p>
+    <p v-if="store.error" class="error-text">{{ store.error }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
-import { debounce } from 'lodash';
+import { ref } from 'vue';
 import { useChartStore } from '../stores/chartStore';
 import { useLocalStorage } from '../composables/useLocalStorage';
 
 const store = useChartStore();
 const { getItem, setItem } = useLocalStorage();
-const localCity = ref(getItem('weatherCity', 'London'));
+const localCity = ref(getItem('weatherCity', ''));
 
 let abortController: AbortController | null = null;
 
 const fetchData = async () => {
-    if (abortController) {
-        abortController.abort();
-    }
-    abortController = new AbortController();
-    await Promise.all([
-        store.fetchWeatherData(localCity.value, abortController),
-        store.fetchCurrentWeather(localCity.value),
-    ]);
-    setItem('weatherCity', localCity.value);
+  if (!localCity.value.trim()) return;
+
+  if (abortController) abortController.abort();
+  abortController = new AbortController();
+
+  store.currentCity = localCity.value;
+
+  await Promise.all([
+    store.fetchWeatherData(localCity.value, abortController),
+    store.fetchCurrentWeather(localCity.value),
+  ]);
+
+  setItem('weatherCity', localCity.value);
 };
-
-const fetchDataDebounced = debounce(async () => {
-    if (abortController) {
-        abortController.abort();
-    }
-    abortController = new AbortController();
-    await Promise.all([
-        store.fetchWeatherData(localCity.value, abortController),
-        store.fetchCurrentWeather(localCity.value),
-    ]);
-    setItem('weatherCity', localCity.value);
-}, 500);
-
-watch(localCity, () => {
-    if (localCity.value.trim()) {
-        fetchDataDebounced();
-        setItem('weatherCity', localCity.value);
-    }
-});
 </script>
 
 <style scoped>
+.city-input {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 16px;
+  min-width: 200px;
+}
+
+.button {
+  padding: 10px 16px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.button:hover {
+  background-color: #1e40af;
+}
+
 .spinner {
-  display: inline-block;
-  width: 24px;
-  height: 24px;
-  border: 4px solid rgba(0, 0, 0, 0.1);
-  border-left-color: #3b82f6;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-left-color: #2563eb;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-left: 8px;
+  animation: spin 0.75s linear infinite;
 }
 
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
+}
+
+.error-text {
+  color: #dc2626;
+  margin-top: 10px;
+  font-size: 14px;
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="chart-container">
+  <div class="chart-container animate-fade-in">
     <canvas ref="chartCanvas"></canvas>
   </div>
 </template>
@@ -20,21 +20,17 @@ const { chartInstance, destroyChart } = useChartInstance();
 const createOrUpdateChart = () => {
   const dataset = store.chartData.datasets[0];
 
-  // 🛡 Защита: нет данных или canvas
   if (!chartCanvas.value || !dataset?.data || dataset.data.length === 0) {
     return;
   }
 
-  // 🎯 Фильтруем только числовые значения
   const numericData = dataset.data.filter((v): v is number => typeof v === 'number');
   if (numericData.length === 0) return;
 
-  // 🧹 Уничтожаем предыдущий график
   if (chartInstance.value) {
     destroyChart();
   }
 
-  // 📊 Создаём новый график
   chartInstance.value = new Chart(chartCanvas.value, {
     type: store.chartType,
     data: store.chartData,
@@ -68,7 +64,6 @@ const createOrUpdateChart = () => {
   });
 };
 
-// 🪄 Обновляем график при изменении данных или типа
 watch(
   [() => store.chartData, () => store.chartType],
   () => {
@@ -77,7 +72,6 @@ watch(
   { deep: true }
 );
 
-// 🚀 Создаём график после монтирования, но только если есть данные
 onMounted(() => {
   createOrUpdateChart();
 });
@@ -85,16 +79,20 @@ onMounted(() => {
 
 <style scoped>
 .chart-container {
-  opacity: 0;
-  animation: fadeIn 1s ease-in-out forwards;
-  max-height: 400px;
-  width: 100%;
+  max-width: 100%;
+  height: 400px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
 }
 
-@keyframes fadeIn {
+@keyframes fade-slide-up {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -102,9 +100,7 @@ onMounted(() => {
   }
 }
 
-@media (max-width: 640px) {
-  .chart-container {
-    max-height: 300px;
-  }
+.animate-fade-in {
+  animation: fade-slide-up 0.6s ease-out;
 }
 </style>
