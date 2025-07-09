@@ -9,56 +9,78 @@ import { ref, onMounted, watch } from 'vue';
 import { Chart, registerables } from 'chart.js';
 import { useChartStore } from '../stores/chartStore';
 import { useChartInstance } from '../composables/useChartInstance';
+import type { CustomDataset } from '../types/weather';
 
 Chart.register(...registerables);
 
 const chartCanvas = ref<HTMLCanvasElement | null>(null);
 const store = useChartStore();
-let chartInstance = useChartInstance();
+const { chartInstance, destroyChart } = useChartInstance();
 
 const createOrUpdateChart = () => {
-  if (chartCanvas.value) {
-    if(chartInstance.value) {
-      chartInstance.value.destroy();
-    }
-    chartInstance.value = new Chart(chartCanvas.value, {
-        type: store.chartType,
-        data: store.chartData,
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: {
-              duration: 1000, // Анимация появления графика (1 секунда)
-              easing: 'easeInOutQuad',
-            },
-            scales: store.chartType === 'pie' ? {} : {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    })
+  const dataset = store.chartData.datasets[0];
+
+  // 🛡 Защита: нет данных или canvas
+  if (!chartCanvas.value || !dataset?.data || dataset.data.length === 0) {
+    return;
   }
+
+  // 🎯 Фильтруем только числовые значения
+  const numericData = dataset.data.filter((v): v is number => typeof v === 'number');
+  if (numericData.length === 0) return;
+
+  // 🧹 Уничтожаем предыдущий график
+  if (chartInstance.value) {
+    destroyChart();
+  }
+
+  // 📊 Создаём новый график
+  chartInstance.value = new Chart(chartCanvas.value, {
+    type: store.chartType,
+    data: store.chartData,
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: {
+        duration: 1000,
+        easing: 'easeInOutQuad',
+      },
+      scales: store.chartType === 'pie' ? {} : {
+        y: {
+          beginAtZero: false,
+          min: Math.min(...numericData) - 1,
+          max: Math.max(...numericData) + 1,
+        },
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            afterBody: (context) => {
+              const index = context[0].dataIndex;
+              const dataset = context[0].dataset as CustomDataset;
+              const desc = dataset.descriptionTooltips?.[index];
+              return desc ? `🌥 ${desc}` : '';
+            },
+          },
+        },
+      },
+    },
+  });
 };
 
-onMounted(() => {
-    createOrUpdateChart()
-});
-
+// 🪄 Обновляем график при изменении данных или типа
 watch(
-  () => store.chartData,
+  [() => store.chartData, () => store.chartType],
   () => {
     createOrUpdateChart();
   },
   { deep: true }
 );
 
-watch(
-  () => store.chartType,
-  () => {
-    createOrUpdateChart();
-  }
-);
+// 🚀 Создаём график после монтирования, но только если есть данные
+onMounted(() => {
+  createOrUpdateChart();
+});
 </script>
 
 <style scoped>
@@ -82,7 +104,7 @@ watch(
 
 @media (max-width: 640px) {
   .chart-container {
-    max-height: 300px; /* Меньшая высота на мобильных */
+    max-height: 300px;
   }
 }
 </style>

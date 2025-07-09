@@ -15,3 +15,12 @@ export const getColorFor = (type: DataType) => {
   if (type === 'pressure') return 'rgba(153, 102, 255, 1)';
   return 'rgba(75, 192, 192, 1)';
 };
+
+export function getColorPalette(count: number): string[] {
+  const palette = [
+    '#60A5FA', '#34D399', '#FBBF24', '#F87171', '#A78BFA',
+    '#F472B6', '#38BDF8', '#10B981', '#F59E0B', '#EF4444'
+  ];
+
+  return Array.from({ length: count }, (_, i) => palette[i % palette.length]);
+}

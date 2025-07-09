@@ -2,28 +2,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import axios from 'axios';
 import { buildChartData } from './chartBuilder';
-import type { DataType } from './chartUtils';
-
-export interface ChartData {
-  labels: string[];
-  datasets: {
-    label: string;
-    data: number[];
-    borderColor: string;
-    fill: boolean;
-  }[];
-}
-
-export interface WeatherForecast {
-  dt: number;
-  main: {
-    temp: number;
-    humidity: number;
-    pressure: number;
-  };
-}
-
-type ChartType = 'line' | 'bar' | 'pie';
+import type { DataType, ChartData, WeatherForecast, CurrentWeather, ChartType } from '../types/weather';
 
 export const useChartStore = defineStore('chart', () => {
   const chartData = ref<ChartData>({ labels: [], datasets: [] });
@@ -33,52 +12,61 @@ export const useChartStore = defineStore('chart', () => {
   const error = ref<string | null>(null);
   const rawForecasts = ref<WeatherForecast[]>([]);
   const currentCity = ref('');
+  const currentWeather = ref<CurrentWeather | null>(null);
 
   const getNextDaysForecasts = (days: number): WeatherForecast[] => {
-    const result: WeatherForecast[] = [];
-    const seenDates = new Set<string>();
+    const grouped: Record<string, WeatherForecast[]> = {};
+  const result: WeatherForecast[] = [];
 
-    for (const f of rawForecasts.value) {
-      const date = new Date(f.dt * 1000).toISOString().split('T')[0];
-      seenDates.add(date);
-      if (seenDates.size > days) break;
-      result.push(f);
-    }
+  for (const f of rawForecasts.value) {
+    const date = new Date(f.dt * 1000).toISOString().split('T')[0];
+    if (!grouped[date]) grouped[date] = [];
+    grouped[date].push(f);
+  }
 
-    return result;
+  const dates = Object.keys(grouped).sort().slice(0, days);
+  dates.forEach(date => {
+    result.push(...grouped[date]); // ✅ Добавляем ВСЕ прогнозы дня
+  });
+
+  return result;
   };
 
   const fetchWeatherData = async (city: string, abortController: AbortController) => {
+    if (!city.trim()) {
+        error.value = 'City name cannot be empty';
+        return;
+    }
     isLoading.value = true;
     error.value = null;
     currentCity.value = city;
 
     try {
-      const response = await axios.get(
+        const response = await axios.get(
         `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${import.meta.env.VITE_API_KEY}&units=metric`,
         { signal: abortController.signal }
-      );
+    );
 
-      rawForecasts.value = response.data.list;
-      await new Promise(resolve => setTimeout(resolve, 500));
-      updateChartData(getNextDaysForecasts(5), city);
-    } catch (err: any) {
-      if (err.name === 'AbortError') {
-        console.log('Request aborted');
-      } else {
-        error.value = 'Failed to fetch weather data. Please check the city name.';
-      }
+    rawForecasts.value = response.data.list;
+    await new Promise(resolve => setTimeout(resolve, 500));
+    updateChartData(getNextDaysForecasts(5), city);
+    } catch (err: unknown) {
+            if (axios.isCancel(err)) {
+                console.log('Request was cancelled');
+            } else {
+                error.value = 'Failed to fetch weather data. Please check the city name.';
+            }
     } finally {
-      isLoading.value = false;
+            isLoading.value = false;
     }
-  };
+    };
 
-  const updateChartType = (type: ChartType) => {
-    chartType.value = type;
-  };
+    const updateChartType = (type: ChartType) => {
+        chartType.value = type;
+    };
 
-  const updateChartData = (forecasts: WeatherForecast[], city: string) => {
-    chartData.value = buildChartData(forecasts, city, dataType.value);
+    const updateChartData = (forecasts: WeatherForecast[], city: string) => {
+        chartData.value = buildChartData(forecasts, city, dataType.value);
   };
 
   const filterByDateRange = (startDate: string, endDate: string) => {
@@ -107,6 +95,37 @@ export const useChartStore = defineStore('chart', () => {
     );
   };
 
+    const fetchCurrentWeather = async (city: string) => {
+        try {
+            const cached = localStorage.getItem('weatherCurrent');
+            const cachedTime = localStorage.getItem('weatherCurrentTime');
+            const now = Date.now();
+            if (cached && cachedTime && now - parseInt(cachedTime) < 3600000) { // 1 час
+            currentWeather.value = JSON.parse(cached) as CurrentWeather;
+            return;
+            }
+
+            const response = await axios.get(
+            `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${import.meta.env.VITE_API_KEY}&units=metric`
+            );
+
+            const weather = response.data;
+            const parsed: CurrentWeather = {
+            temp: weather.main.temp,
+            humidity: weather.main.humidity,
+            pressure: weather.main.pressure,
+            description: weather.weather[0]?.description ?? 'No data',
+            city: weather.name,
+            };
+
+            currentWeather.value = parsed;
+            localStorage.setItem('weatherCurrent', JSON.stringify(parsed));
+            localStorage.setItem('weatherCurrentTime', now.toString());
+        } catch (err: unknown) {
+            console.error('Failed to fetch current weather', err);
+        }
+    };
+
   return {
     chartData,
     chartType,
@@ -118,6 +137,8 @@ export const useChartStore = defineStore('chart', () => {
     filterByDateRange,
     updateChartData,
     rawForecasts,
-    currentCity
+    currentCity,
+    currentWeather,
+    fetchCurrentWeather,
   };
 });

@@ -3,4 +3,14 @@ import { Chart } from 'chart.js';
 
 const chartInstance = ref<Chart | null>(null);
 
-export const useChartInstance = () => chartInstance;
+const destroyChart = () => {
+  if (chartInstance.value) {
+    chartInstance.value.destroy();
+    chartInstance.value = null;
+  }
+};
+
+export const useChartInstance = () => ({
+  chartInstance, 
+  destroyChart,
+});
