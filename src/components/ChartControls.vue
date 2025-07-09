@@ -76,11 +76,9 @@ import { computed } from 'vue';
 import { useChartStore } from '../stores/chartStore';
 import { useChartInstance } from '../composables/useChartInstance';
 import { useDateFilter } from '../composables/useDateFilter';
-import { useLocalStorage } from '../composables/useLocalStorage';
 
 const store = useChartStore();
 const { startDate, endDate, maxDate, filterData, resetDates } = useDateFilter();
-const { removeItem } = useLocalStorage();
 const { chartInstance } = useChartInstance();
 
 const selectedChartType = computed({
