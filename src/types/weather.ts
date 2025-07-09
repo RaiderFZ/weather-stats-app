@@ -30,6 +30,7 @@ export interface CurrentWeather {
   pressure: number;
   description: string;
   city: string;
+  icon: string;
 }
 
 export type ChartType = 'line' | 'bar' | 'pie';

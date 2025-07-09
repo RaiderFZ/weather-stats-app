@@ -3,19 +3,26 @@
     <div
       v-if="store.currentWeather"
       key="weather-card"
-      class="weather-card animate-fade-in"
+      class="weather-card"
     >
-      <div class="weather-main">
-        <div class="weather-icon">🌤</div>
+      <div class="weather-left">
+
+          <img
+            v-if="store.currentWeather.icon"
+            :src="`https://openweathermap.org/img/wn/${store.currentWeather.icon}@2x.png`"
+            alt="Weather Icon"
+            class="weather-icon"
+          />
+
         <div>
-          <h2 class="city-name">{{ store.currentWeather.city }}</h2>
+          <h2 class="city">{{ store.currentWeather.city }}</h2>
           <p class="description">{{ store.currentWeather.description }}</p>
         </div>
       </div>
-      <div class="weather-info">
-        <p class="temp">{{ store.currentWeather.temp }}°C</p>
-        <p class="text-sm text-gray-700">💧 Humidity: {{ store.currentWeather.humidity }}%</p>
-        <p class="text-sm text-gray-700">🧭 Pressure: {{ store.currentWeather.pressure }} hPa</p>
+      <div class="weather-right">
+        <p class="temp">{{ store.currentWeather.temp.toFixed(2) }}°C</p>
+        <p class="humidity">💧 Humidity: {{ store.currentWeather.humidity }}%</p>
+        <p class="pressure">🌡 Pressure: {{ store.currentWeather.pressure }} hPa</p>
       </div>
     </div>
   </transition>
@@ -23,52 +30,61 @@
 
 <script setup lang="ts">
 import { useChartStore } from '../stores/chartStore';
-
 const store = useChartStore();
 </script>
 
 <style scoped>
 .weather-card {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(8px);
-  padding: 20px;
-  border-radius: 16px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
   display: flex;
-  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #f4f6f8, #ffffff);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.weather-main {
+.weather-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 1rem;
 }
 
 .weather-icon {
-  font-size: 48px;
+  width: 60px;
+  height: 60px;
+  background-color: #f3f4f6; 
+  border: 2px solid #d1d5db;
+  border-radius: 50%;
+  padding: 6px;
 }
 
-.city-name {
-  font-size: 24px;
-  font-weight: bold;
+.city {
+  font-size: 1.5rem;
+  font-weight: 600;
   color: #1e3a8a;
 }
 
 .description {
   text-transform: capitalize;
-  color: #4b5563;
+  color: #374151;
 }
 
-.weather-info {
+.weather-right {
   text-align: right;
 }
 
 .temp {
-  font-size: 36px;
+  font-size: 2rem;
   font-weight: bold;
   color: #2563eb;
 }
+
+.humidity,
+.pressure {
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+
 </style>

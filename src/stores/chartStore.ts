@@ -96,6 +96,7 @@ export const useChartStore = defineStore('chart', () => {
   };
 
     const fetchCurrentWeather = async (city: string) => {
+      
       try {
         const key = `weatherCurrent-${city.toLowerCase()}`;
         const timeKey = `weatherCurrentTime-${city.toLowerCase()}`;
@@ -113,17 +114,20 @@ export const useChartStore = defineStore('chart', () => {
         );
 
         const weather = response.data;
+
         const parsed: CurrentWeather = {
           temp: weather.main.temp,
           humidity: weather.main.humidity,
           pressure: weather.main.pressure,
           description: weather.weather[0]?.description ?? 'No data',
           city: weather.name,
+          icon: weather.weather[0]?.icon ?? '01d',
         };
 
         currentWeather.value = parsed;
         localStorage.setItem(key, JSON.stringify(parsed));
         localStorage.setItem(timeKey, now.toString());
+
       } catch (err) {
         console.error('Failed to fetch current weather', err);
       }
