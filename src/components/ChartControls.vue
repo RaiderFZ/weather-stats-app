@@ -12,6 +12,19 @@
         <option value="pie">Pie</option>
       </select>
     </div>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+      <label for="dataType" class="mr-2">Data Type:</label>
+      <select
+        id="dataType"
+        v-model="selectedDataType"
+        class="border p-2 w-full sm:w-auto"
+      >
+        <option value="temperature">Temperature</option>
+        <option value="humidity">Humidity</option>
+        <option value="pressure">Pressure</option>
+      </select>
+    </div>
+
     <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
       <div class="flex flex-col">
         <label for="startDate" class="mr-2">Start Date:</label>
@@ -64,7 +77,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useChartStore } from '../stores/chartData';
+import { useChartStore } from '../stores/chartStore';
 import { useChartInstance } from '../composables/useChartInstance';
 
 const store = useChartStore();
@@ -132,6 +145,14 @@ const clearLocalStorage = () => {
       startDate.value = savedStart;
       endDate.value = savedEnd;
       store.filterByDateRange(savedStart, savedEnd);
+    }
+  });
+
+  const selectedDataType = computed({
+    get: () => store.dataType,
+    set: (val) => {
+      store.dataType = val;
+      store.updateChartData(store.rawForecasts, store.currentCity);
     }
   });
 </script>

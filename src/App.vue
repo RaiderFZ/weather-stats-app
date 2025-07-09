@@ -32,7 +32,7 @@
 import {ref} from 'vue';
 import LineChart from './components/LineChart.vue';
 import ChartControls from './components/ChartControls.vue';
-import { useChartStore } from './stores/chartData';
+import { useChartStore } from './stores/chartStore';
 
 const store = useChartStore();
 const city = ref('London');

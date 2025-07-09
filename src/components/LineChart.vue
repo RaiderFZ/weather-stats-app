@@ -7,7 +7,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { Chart, registerables } from 'chart.js';
-import { useChartStore } from '../stores/chartData';
+import { useChartStore } from '../stores/chartStore';
 import { useChartInstance } from '../composables/useChartInstance';
 
 Chart.register(...registerables);
